@@ -10,6 +10,5 @@ public class Company {
 
     private List<Member> members;
     private Long id;
-    private Person socioNome;
     private String name;
 }

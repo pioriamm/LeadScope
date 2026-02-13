@@ -8,7 +8,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,119 +25,104 @@ public class ProsprestarService {
 
         this.restClient = RestClient.builder()
                 .baseUrl("https://api.cnpja.com")
-                .defaultHeader("Authorization",  token)
+                .defaultHeader("Authorization", token)
                 .defaultHeader("Accept", "application/json")
                 .build();
     }
 
-    public void buscarDados(List<Map<String, String>> mapa) {
+    public List<Map<String, Object>> buscarDados(List<Map<String, String>> mapa) {
 
-        List<String> ListaCnpjBaseConciliadora = mapa.stream()
+        List<String> listaCnpjBase = mapa.stream()
                 .flatMap(m -> m.values().stream())
                 .toList();
-        List<Person> listaPrimeiraPesquisa = new ArrayList<>();
-        List<Person> listaSocioTotal = new ArrayList<>();
-        List<Company> listaEmpresasSocios = new ArrayList<>();
 
-        List<Map<String,String> > ListaObj = new  ArrayList<>();;
+        List<Map<String, Object>> listaFinal = new ArrayList<>();
 
-        String primeiraEmpresa = inicializadorPesquisa(ListaCnpjBaseConciliadora, listaPrimeiraPesquisa);
+        for (String cnpjBase : listaCnpjBase) {
 
-        //pega o primeiro socio da lista da empresa
-
-        for (Person person : listaPrimeiraPesquisa) {
-             var id = person.getId();
             aguardarLimite();
 
-            PersonResponse personResponse = executarComRetry(() ->
-                    restClient.get()
-                            .uri("/person/{id}", id)
-                            .retrieve()
-                            .body(PersonResponse.class)
-            );
-
-            for (Membership membership : personResponse.getMembership()) {
-
-                Company company = membership.getCompany();
-
-                if (!primeiraEmpresa.contains(company.getName())) {
-                    var comp = new Company();
-                    comp.setId(membership.getCompany().getId());
-                    comp.setName(membership.getCompany().getName());
-                    comp.setSocioNome(person);
-                    listaEmpresasSocios.add(comp);
-                }
-
-                aguardarLimite();
-
-                CompanyResponse companyResponse = executarComRetry(() ->
-                        restClient.get()
-                                .uri("/company/{id}", company.getId())
-                                .retrieve()
-                                .body(CompanyResponse.class)
-                );
-
-                List<Member> members = companyResponse.getMembers();
-                company.setMembers(members);
-
-                System.out.println(company);
-
-                for (Member member : members) {
-                    Person pp = member.getPerson();
-                    listaSocioTotal.add(pp);
-
-                }
-
-            }
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-//        System.out.println("----------------------------");
-//        System.out.println("Sócios da primeira empresa:");
-//        System.out.println(listaPrimeiraPesquisa);
-
-        System.out.print("\uD83D\uDC49\uD83D\uDC49\uD83D\uDC49\uD83D\uDC49");
-        System.out.println("Empresas relacionadas:");
-        System.out.println(listaEmpresasSocios);
-
-        System.out.print("\uD83D\uDC49\uD83D\uDC49\uD83D\uDC49\uD83D\uDC49 ");
-        System.out.println("Sócios das empresas relacionadas:");
-        System.out.println(listaSocioTotal);
-    }
-
-    private String inicializadorPesquisa( List<String> ListaCnpjBase , List<Person> listaPrimeiraPesquisa) {
-
-        for (String cnpjbase : ListaCnpjBase){
+            Map<String, Object> dadosFinal = new LinkedHashMap<>();
 
             OfficeResponse response = executarComRetry(() ->
                     restClient.get()
-                            .uri("/office/{cnpjbase}", cnpjbase)
+                            .uri("/office/{cnpj}", cnpjBase)
                             .retrieve()
                             .body(OfficeResponse.class)
             );
 
-            for (Member member : response.getCompany().getMembers()) {
-                listaPrimeiraPesquisa.add(member.getPerson());
+            dadosFinal.put("compania_id", response.getCompany().getId());
+            dadosFinal.put("cnpj_raiz_id", response.getTaxId());
+            dadosFinal.put("empresa_raiz", response.getCompany().getName());
+
+
+            dadosFinal.put("alias", response.getAlias());
+            dadosFinal.put("email", response.getEmails());
+            dadosFinal.put("telefone", response.getPhones());
+            dadosFinal.put("status", response.getStatus());
+
+
+
+            List<Map<String, Object>> listaMembros = new ArrayList<>();
+
+            for (Member membro : response.getCompany().getMembers()) {
+
+                aguardarLimite();
+
+                Map<String, Object> membroMap = new LinkedHashMap<>();
+
+                String idMembro = membro.getPerson().getId();
+
+                membroMap.put("id_membro", idMembro);
+                membroMap.put("nome_membro", membro.getPerson().getName());
+
+                PersonResponse personResponse = executarComRetry(() ->
+                        restClient.get()
+                                .uri("/person/{id}", idMembro)
+                                .retrieve()
+                                .body(PersonResponse.class)
+                );
+
+                List<Map<String, Object>> listaEmpresasSocio = new ArrayList<>();
+
+                for (Membership membership : personResponse.getMembership()) {
+
+                    aguardarLimite();
+
+                    Map<String, Object> empresaMap = new LinkedHashMap<>();
+
+                    String idEmpresaSocio =
+                            String.valueOf(membership.getCompany().getId());
+
+                    empresaMap.put("id_empresa_socio", idEmpresaSocio);
+                    empresaMap.put("nome_empresa_socio",
+                            membership.getCompany().getName());
+
+                    CompanyResponse companyResponse = executarComRetry(() ->
+                            restClient.get()
+                                    .uri("/company/{id}", idEmpresaSocio)
+                                    .retrieve()
+                                    .body(CompanyResponse.class)
+                    );
+
+                    empresaMap.put("membros_empresa_socio",
+                            companyResponse.getMembers());
+
+                    listaEmpresasSocio.add(empresaMap);
+                }
+
+                membroMap.put("empresas", listaEmpresasSocio);
+                listaMembros.add(membroMap);
             }
-            return response.getCompany().getName();
+
+            dadosFinal.put("membros", listaMembros);
+
+            listaFinal.add(dadosFinal);
         }
-        return "";
+
+        return listaFinal;
     }
 
-    // =====================================
-    // 🔹 CONTROLE DE RATE LIMIT (6s)
-    // =====================================
     private void aguardarLimite() {
         try {
             Thread.sleep(6000);
@@ -146,9 +131,6 @@ public class ProsprestarService {
         }
     }
 
-    // =====================================
-    // 🔹 RETRY AUTOMÁTICO PARA 429
-    // =====================================
     private <T> T executarComRetry(SupplierWithException<T> supplier) {
 
         while (true) {
@@ -156,10 +138,10 @@ public class ProsprestarService {
                 return supplier.get();
             } catch (HttpClientErrorException.TooManyRequests e) {
 
-                String body = e.getResponseBodyAsString();
-                int ttl = extrairTTL(body);
+                int ttl = extrairTTL(e.getResponseBodyAsString());
 
-                System.out.println("Rate limit atingido. Aguardando " + ttl + " segundos...");
+                System.out.println("Rate limit atingido. Aguardando "
+                        + ttl + " segundos...");
 
                 try {
                     Thread.sleep(ttl * 1000L);
