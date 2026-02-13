@@ -8,6 +8,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,23 +30,28 @@ public class ProsprestarService {
                 .build();
     }
 
-    public void buscarDados(Map<String, String> request) {
+    public void buscarDados(List<Map<String, String>> mapa) {
 
-        String cnpj = request.get("cnpj");
-
+        List<String> ListaCnpjBaseConciliadora = mapa.stream()
+                .flatMap(m -> m.values().stream())
+                .toList();
         List<Person> listaPrimeiraPesquisa = new ArrayList<>();
         List<Person> listaSocioTotal = new ArrayList<>();
         List<Company> listaEmpresasSocios = new ArrayList<>();
 
-        String primeiraEmpresa = inicializadorPesquisa(cnpj, listaPrimeiraPesquisa);
+        List<Map<String,String> > ListaObj = new  ArrayList<>();;
+
+        String primeiraEmpresa = inicializadorPesquisa(ListaCnpjBaseConciliadora, listaPrimeiraPesquisa);
+
+        //pega o primeiro socio da lista da empresa
 
         for (Person person : listaPrimeiraPesquisa) {
-
+             var id = person.getId();
             aguardarLimite();
 
             PersonResponse personResponse = executarComRetry(() ->
                     restClient.get()
-                            .uri("/person/{id}", person.getId())
+                            .uri("/person/{id}", id)
                             .retrieve()
                             .body(PersonResponse.class)
             );
@@ -54,50 +60,79 @@ public class ProsprestarService {
 
                 Company company = membership.getCompany();
 
-                // comparação correta de String
                 if (!primeiraEmpresa.contains(company.getName())) {
-                    listaEmpresasSocios.add(company);
+                    var comp = new Company();
+                    comp.setId(membership.getCompany().getId());
+                    comp.setName(membership.getCompany().getName());
+                    comp.setSocioNome(person);
+                    listaEmpresasSocios.add(comp);
                 }
 
                 aguardarLimite();
 
-                Member member = executarComRetry(() ->
+                CompanyResponse companyResponse = executarComRetry(() ->
                         restClient.get()
                                 .uri("/company/{id}", company.getId())
                                 .retrieve()
-                                .body(Member.class)
+                                .body(CompanyResponse.class)
                 );
 
-                if (member != null) {
-                    listaSocioTotal.add(member.getPerson());
+                List<Member> members = companyResponse.getMembers();
+                company.setMembers(members);
+
+                System.out.println(company);
+
+                for (Member member : members) {
+                    Person pp = member.getPerson();
+                    listaSocioTotal.add(pp);
+
                 }
+
             }
         }
 
-        System.out.println("Sócios da primeira empresa:");
-        System.out.println(listaPrimeiraPesquisa);
 
+
+
+
+
+
+
+
+
+
+
+
+//        System.out.println("----------------------------");
+//        System.out.println("Sócios da primeira empresa:");
+//        System.out.println(listaPrimeiraPesquisa);
+
+        System.out.print("\uD83D\uDC49\uD83D\uDC49\uD83D\uDC49\uD83D\uDC49");
         System.out.println("Empresas relacionadas:");
         System.out.println(listaEmpresasSocios);
 
+        System.out.print("\uD83D\uDC49\uD83D\uDC49\uD83D\uDC49\uD83D\uDC49 ");
         System.out.println("Sócios das empresas relacionadas:");
         System.out.println(listaSocioTotal);
     }
 
-    private String inicializadorPesquisa(String cnpj, List<Person> listaPrimeiraPesquisa) {
+    private String inicializadorPesquisa( List<String> ListaCnpjBase , List<Person> listaPrimeiraPesquisa) {
 
-        OfficeResponse response = executarComRetry(() ->
-                restClient.get()
-                        .uri("/office/{cnpj}", cnpj)
-                        .retrieve()
-                        .body(OfficeResponse.class)
-        );
+        for (String cnpjbase : ListaCnpjBase){
 
-        for (Member member : response.getCompany().getMembers()) {
-            listaPrimeiraPesquisa.add(member.getPerson());
+            OfficeResponse response = executarComRetry(() ->
+                    restClient.get()
+                            .uri("/office/{cnpjbase}", cnpjbase)
+                            .retrieve()
+                            .body(OfficeResponse.class)
+            );
+
+            for (Member member : response.getCompany().getMembers()) {
+                listaPrimeiraPesquisa.add(member.getPerson());
+            }
+            return response.getCompany().getName();
         }
-
-        return response.getCompany().getName();
+        return "";
     }
 
     // =====================================

@@ -4,6 +4,7 @@ import br.com.pioriam.leadscope.servicos.ProsprestarService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -17,11 +18,11 @@ public class Prospectar {
     }
 
     @GetMapping("/pesquisar_cnpj")
-    public ResponseEntity<String> criarRelacoes(@RequestBody Map<String, String> cnpj) {
+    public ResponseEntity<String> criarRelacoes(@RequestBody List<Map<String, String>> dados) {
 
         try {
-            proprestarService.buscarDados(cnpj);
-            return ResponseEntity.ok("Processamento concluído.");
+            proprestarService.buscarDados(dados);
+            return ResponseEntity.ok("Done.");
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body("Erro ao processar requisição: " + e.getMessage());
