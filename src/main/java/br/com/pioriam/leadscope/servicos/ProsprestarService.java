@@ -36,6 +36,7 @@ public class ProsprestarService {
                 .flatMap(m -> m.values().stream())
                 .toList();
 
+        Prospectar prospectar = new Prospectar();
         List<Map<String, Object>> listaFinal = new ArrayList<>();
 
         for (String cnpjBase : listaCnpjBase) {
@@ -105,8 +106,15 @@ public class ProsprestarService {
                                     .body(CompanyResponse.class)
                     );
 
-                    empresaMap.put("membros_empresa_socio",
-                            companyResponse.getMembers());
+                    var ListPerson = new ArrayList<>();
+
+                    for (Member member : companyResponse.getMembers()) {
+
+                        Person person = member.getPerson();
+                        ListPerson.add(person);
+                    }
+
+                    empresaMap.put("membros_empresa_socio", ListPerson);
 
                     listaEmpresasSocio.add(empresaMap);
                 }
@@ -119,6 +127,9 @@ public class ProsprestarService {
 
             listaFinal.add(dadosFinal);
         }
+
+        prospectar.setDados(listaFinal);
+        prospectarRepositorio.save(prospectar);
 
         return listaFinal;
     }

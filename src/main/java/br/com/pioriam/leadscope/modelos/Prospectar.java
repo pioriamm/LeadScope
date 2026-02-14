@@ -4,12 +4,15 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document("clientes")
+import java.util.List;
+import java.util.Map;
+
+@Document(collection = "prospectar")
 @Data
-public class Cliente {
+public class Prospectar {
 
     @Id
     private String id;
-    private String nome;
-}
+    private List<Map<String, Object>> dados;
 
+}

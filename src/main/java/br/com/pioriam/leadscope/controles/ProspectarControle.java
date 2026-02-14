@@ -22,11 +22,8 @@ public class ProspectarControle {
             @RequestBody List<Map<String, String>> dados) {
 
         try {
-            List<Map<String, Object>> resultado =
-                    proprestarService.buscarDados(dados);
-
+            List<Map<String, Object>> resultado = proprestarService.buscarDados(dados);
             return ResponseEntity.ok(resultado);
-
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
