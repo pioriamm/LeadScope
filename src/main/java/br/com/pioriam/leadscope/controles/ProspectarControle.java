@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/v1/cnpjja")
 public class ProspectarControle {
@@ -14,6 +14,7 @@ public class ProspectarControle {
     private final ProsprestarService proprestarService;
 
     public ProspectarControle(ProsprestarService proprestarService) {
+
         this.proprestarService = proprestarService;
     }
 
@@ -24,6 +25,7 @@ public class ProspectarControle {
         try {
             List<Map<String, Object>> resultado = proprestarService.buscarDados(dados);
             return ResponseEntity.ok(resultado);
+
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }

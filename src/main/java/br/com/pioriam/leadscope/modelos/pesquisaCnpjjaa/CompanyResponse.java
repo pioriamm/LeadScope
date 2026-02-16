@@ -1,6 +1,5 @@
-package br.com.pioriam.leadscope.modelos;
+package br.com.pioriam.leadscope.modelos.pesquisaCnpjjaa;
 
-import br.com.pioriam.leadscope.modelos.Member;
 import lombok.Data;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package br.com.pioriam.leadscope.modelos;
+package br.com.pioriam.leadscope.modelos.pesquisaCnpjjaa;
 
 import lombok.Data;
 
