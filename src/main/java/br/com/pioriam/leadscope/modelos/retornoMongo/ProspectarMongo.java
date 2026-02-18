@@ -11,8 +11,5 @@ import java.util.List;
 public class ProspectarMongo {
     @Id
     private String id;
-
     private List<Dados> dados;
-
-    private String _class;
 }

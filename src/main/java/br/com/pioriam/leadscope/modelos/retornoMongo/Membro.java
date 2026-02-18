@@ -1,12 +1,16 @@
 package br.com.pioriam.leadscope.modelos.retornoMongo;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
+@JsonPropertyOrder({
+        "nome_membro",
+        "empresas",
+})
 public class Membro {
-
-    private String id_membro;
     private String nome_membro;
-
-    // getters e setters
+    private List<Empresa> empresas;
 }
