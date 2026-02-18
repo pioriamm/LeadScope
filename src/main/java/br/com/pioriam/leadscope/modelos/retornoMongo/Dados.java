@@ -20,10 +20,10 @@ import java.util.List;
 })
 public class Dados {
 
-    private Integer compania_id;
+   // private Integer compania_id;
     private String cnpj_raiz_id;
     private String empresa_raiz;
-    private String alias;
+    //private String alias;
     private List<Email> email;
     private List<Phone> telefone;
     private Status status;
