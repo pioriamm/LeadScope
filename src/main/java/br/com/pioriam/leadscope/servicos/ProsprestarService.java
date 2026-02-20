@@ -8,6 +8,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ProsprestarService {
@@ -15,12 +16,14 @@ public class ProsprestarService {
     private final ProspectarRepositorio prospectarRepositorio;
     private final RestClient restClient;
 
-    // 🔥 Cache para evitar chamadas repetidas
-    private final Map<String, PersonResponse> personCache = new HashMap<>();
-    private final Map<String, CompanyResponse> companyCache = new HashMap<>();
+    // ================= CACHE GLOBAL =================
+    private final Map<String, PersonResponse> personCache = new ConcurrentHashMap<>();
+    private final Map<String, CompanyResponse> companyCache = new ConcurrentHashMap<>();
+    private final Map<String, OfficeResponse> officeCache = new ConcurrentHashMap<>();
 
-    public ProsprestarService(ProspectarRepositorio prospectarRepositorio,
-                              @Value("${cnpja.token}") String token) {
+    public ProsprestarService(
+            ProspectarRepositorio prospectarRepositorio,
+            @Value("${cnpja.token}") String token) {
 
         this.prospectarRepositorio = prospectarRepositorio;
 
@@ -31,6 +34,10 @@ public class ProsprestarService {
                 .build();
     }
 
+    // =====================================================
+    // ENTRY POINT
+    // =====================================================
+
     public List<Map<String, Object>> buscarDados(List<Map<String, String>> mapa) {
 
         List<String> listaCnpjBase = mapa.stream()
@@ -38,14 +45,15 @@ public class ProsprestarService {
                 .distinct()
                 .toList();
 
-        List<Map<String, Object>> listaFinal = new ArrayList<>(listaCnpjBase.size());
+        List<Map<String, Object>> listaFinal = new ArrayList<>();
 
         for (String cnpjBase : listaCnpjBase) {
 
-            OfficeResponse office = buscarOffice(cnpjBase);
-            Map<String, Object> dadosEmpresa = montarEmpresa(office);
+            OfficeResponse office = buscarOfficeCached(cnpjBase);
 
-            listaFinal.add(dadosEmpresa);
+            Map<String, Object> empresa = montarEmpresa(office);
+
+            listaFinal.add(empresa);
         }
 
         Prospectar prospectar = new Prospectar();
@@ -55,19 +63,9 @@ public class ProsprestarService {
         return listaFinal;
     }
 
-    // ==========================
-    // 🔥 MÉTODOS SEPARADOS
-    // ==========================
-
-    private OfficeResponse buscarOffice(String cnpj) {
-        aguardarLimite();
-        return executarComRetry(() ->
-                restClient.get()
-                        .uri("/office/{cnpj}", cnpj)
-                        .retrieve()
-                        .body(OfficeResponse.class)
-        );
-    }
+    // =====================================================
+    // BUILD EMPRESA RAIZ
+    // =====================================================
 
     private Map<String, Object> montarEmpresa(OfficeResponse response) {
 
@@ -92,22 +90,24 @@ public class ProsprestarService {
         return dados;
     }
 
+    // =====================================================
+    // MEMBRO
+    // =====================================================
+
     private Map<String, Object> montarMembro(Member membro) {
 
-        aguardarLimite();
+        String idPessoa = membro.getPerson().getId();
 
-        String idMembro = membro.getPerson().getId();
-
-        Map<String, Object> membroMap = new LinkedHashMap<>();
-        membroMap.put("id_membro", idMembro);
-        membroMap.put("nome_membro", membro.getPerson().getName());
-
-        PersonResponse personResponse = personCache.computeIfAbsent(
-                idMembro,
+        PersonResponse person = personCache.computeIfAbsent(
+                idPessoa,
                 this::buscarPerson
         );
 
-        List<Map<String, Object>> empresas = personResponse.getMembership()
+        Map<String, Object> membroMap = new LinkedHashMap<>();
+        membroMap.put("id_membro", idPessoa);
+        membroMap.put("nome_membro", membro.getPerson().getName());
+
+        List<Map<String, Object>> empresas = person.getMembership()
                 .stream()
                 .map(this::montarEmpresaSocio)
                 .toList();
@@ -117,42 +117,79 @@ public class ProsprestarService {
         return membroMap;
     }
 
-    private PersonResponse buscarPerson(String id) {
-        return executarComRetry(() ->
-                restClient.get()
-                        .uri("/person/{id}", id)
-                        .retrieve()
-                        .body(PersonResponse.class)
-        );
-    }
+    // =====================================================
+    // EMPRESA DO SÓCIO (ULTRA OTIMIZADO)
+    // =====================================================
 
     private Map<String, Object> montarEmpresaSocio(Membership membership) {
 
-        aguardarLimite();
+        String companyId = String.valueOf(membership.getCompany().getId());
 
-        String idEmpresa = String.valueOf(membership.getCompany().getId());
-
-        Map<String, Object> empresaMap = new LinkedHashMap<>();
-        empresaMap.put("id_empresa_socio", idEmpresa);
-        empresaMap.put("nome_empresa_socio",
-                membership.getCompany().getName());
-
-        CompanyResponse companyResponse = companyCache.computeIfAbsent(
-                idEmpresa,
+        CompanyResponse company = companyCache.computeIfAbsent(
+                companyId,
                 this::buscarCompany
         );
 
-        List<Person> membrosEmpresa = companyResponse.getMembers()
+        Map<String, Object> empresaMap = new LinkedHashMap<>();
+        empresaMap.put("id_empresa_socio", companyId);
+        empresaMap.put("nome_empresa_socio", company.getName());
+
+        // membros empresa
+        List<Person> membrosEmpresa = company.getMembers()
                 .stream()
                 .map(Member::getPerson)
                 .toList();
 
         empresaMap.put("membros_empresa_socio", membrosEmpresa);
 
+        // ======================
+        // OFFICE MATRIZ
+        // ======================
+
+        company.getOffices()
+                .stream()
+                .filter(o -> Boolean.TRUE.equals(o.getHead()))
+                .findFirst()
+                .ifPresent(officeInfo -> {
+
+                    String taxId = officeInfo.getTaxId();
+
+                    OfficeResponse office = officeCache.computeIfAbsent(
+                            taxId,
+                            this::buscarOffice
+                    );
+
+                    empresaMap.put("telefone", office.getPhones());
+                    empresaMap.put("email", office.getEmails());
+                    empresaMap.put("status", office.getStatus());
+                });
+
         return empresaMap;
     }
 
+    // =====================================================
+    // API CALLS COM CACHE
+    // =====================================================
+
+    private OfficeResponse buscarOfficeCached(String taxId) {
+        return officeCache.computeIfAbsent(
+                taxId,
+                this::buscarOffice
+        );
+    }
+
+    private OfficeResponse buscarOffice(String taxId) {
+        aguardarLimite();
+        return executarComRetry(() ->
+                restClient.get()
+                        .uri("/office/{taxId}", taxId)
+                        .retrieve()
+                        .body(OfficeResponse.class)
+        );
+    }
+
     private CompanyResponse buscarCompany(String id) {
+        aguardarLimite();
         return executarComRetry(() ->
                 restClient.get()
                         .uri("/company/{id}", id)
@@ -161,9 +198,19 @@ public class ProsprestarService {
         );
     }
 
-    // ==========================
-    // RATE LIMIT
-    // ==========================
+    private PersonResponse buscarPerson(String id) {
+        aguardarLimite();
+        return executarComRetry(() ->
+                restClient.get()
+                        .uri("/person/{id}", id)
+                        .retrieve()
+                        .body(PersonResponse.class)
+        );
+    }
+
+    // =====================================================
+    // RATE LIMIT HANDLER
+    // =====================================================
 
     private void aguardarLimite() {
         try {

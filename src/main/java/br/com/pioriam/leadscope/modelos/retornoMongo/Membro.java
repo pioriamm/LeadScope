@@ -7,10 +7,13 @@ import java.util.List;
 
 @Data
 @JsonPropertyOrder({
+        "id_membro",
         "nome_membro",
         "empresas",
 })
 public class Membro {
+    private String id_membro;
     private String nome_membro;
-    private List<Empresa> empresas;
+
+    private List<EmpresaSocio> empresas;
 }

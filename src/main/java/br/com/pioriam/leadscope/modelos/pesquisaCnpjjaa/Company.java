@@ -10,4 +10,5 @@ public class Company {
     private List<Member> members;
     private Long id;
     private String name;
+    private List<Office> ListOffice;
 }

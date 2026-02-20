@@ -10,7 +10,7 @@ import java.util.List;
 
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/v1/pesquisar")
+@RequestMapping("/v1/mongo")
 public class PesquisaControler {
 
     @Autowired

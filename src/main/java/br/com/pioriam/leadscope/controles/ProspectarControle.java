@@ -18,7 +18,7 @@ public class ProspectarControle {
         this.proprestarService = proprestarService;
     }
 
-    @PostMapping("pesquisar_cnpj")
+    @PostMapping("popularBase")
     public ResponseEntity<List<Map<String, Object>>> criarRelacoes(
             @RequestBody List<Map<String, String>> dados) {
 

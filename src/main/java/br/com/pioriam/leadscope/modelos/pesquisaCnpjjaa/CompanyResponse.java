@@ -9,6 +9,5 @@ public class CompanyResponse {
     private Long id;
     private String name;
     private List<Member> members;
-
-    // getters e setters
+    private List<Office> offices;
 }

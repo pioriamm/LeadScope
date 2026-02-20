@@ -6,5 +6,6 @@ import lombok.Data;
 public class Phone {
     private String area;
     private String number;
+    private String type;
 
 }
