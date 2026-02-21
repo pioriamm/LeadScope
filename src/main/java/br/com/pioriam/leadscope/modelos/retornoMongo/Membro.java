@@ -14,6 +14,5 @@ import java.util.List;
 public class Membro {
     private String id_membro;
     private String nome_membro;
-
     private List<EmpresaSocio> empresas;
 }

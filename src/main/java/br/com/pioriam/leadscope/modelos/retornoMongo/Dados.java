@@ -14,6 +14,7 @@ import java.util.List;
         "email",
         "telefone",
         "status",
+        "cnae",
         "membros"
 })
 public class Dados {
@@ -26,6 +27,7 @@ public class Dados {
  private List<Email> email;
  private List<Phone> telefone;
  private Status status;
+ private Cnae cnae;
 
  private List<Membro> membros;
 }

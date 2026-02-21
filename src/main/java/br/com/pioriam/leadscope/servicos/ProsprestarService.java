@@ -78,6 +78,7 @@ public class ProsprestarService {
         dados.put("email", response.getEmails());
         dados.put("telefone", response.getPhones());
         dados.put("status", response.getStatus());
+        dados.put("cnae",  response.getMainActivity());
 
         List<Map<String, Object>> membros = response.getCompany()
                 .getMembers()
@@ -134,6 +135,7 @@ public class ProsprestarService {
         empresaMap.put("id_empresa_socio", companyId);
         empresaMap.put("nome_empresa_socio", company.getName());
 
+
         // membros empresa
         List<Person> membrosEmpresa = company.getMembers()
                 .stream()
@@ -158,10 +160,11 @@ public class ProsprestarService {
                             taxId,
                             this::buscarOffice
                     );
-
+                    empresaMap.put("cnpj_empresa_socio", office.getTaxId());
                     empresaMap.put("telefone", office.getPhones());
                     empresaMap.put("email", office.getEmails());
                     empresaMap.put("status", office.getStatus());
+                    empresaMap.put("cnae",  office.getMainActivity());
                 });
 
         return empresaMap;
