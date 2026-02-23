@@ -27,4 +27,10 @@ public class EmpresaConciliadoraControler {
         EmpresaConciliadora novaEmpresa = empresaConciliadoraService.save(empresa);
         return ResponseEntity.ok(novaEmpresa);
     }
+
+    @PutMapping("/{id}/pesquisado")
+    public ResponseEntity<Void> atualizarStatus(@PathVariable String id) {
+        empresaConciliadoraService.atualizarStatus(id);
+        return ResponseEntity.noContent().build();
+    }
 }
