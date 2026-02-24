@@ -13,6 +13,9 @@ public class EmpresaConciliadora {
     private String razaoSocial;
     private String alias;
     private String cnpj;
+    private String cna;
+    private String cnaDescricao;
+    private boolean conciliadora;
     private boolean pesquisado;
 
 }
