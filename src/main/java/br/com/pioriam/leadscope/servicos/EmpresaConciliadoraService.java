@@ -30,4 +30,8 @@ public class EmpresaConciliadoraService {
         empresa.setPesquisado(true);
         empresaConciliadoraRepositorio.save(empresa);
     }
+
+    public boolean findByIdCnpj(String cnpj){
+        return empresaConciliadoraRepositorio.existsByCnpj(cnpj);
+    }
 }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ProsprestarService {
 
     private final ProspectarRepositorio prospectarRepositorio;
+    private final EmpresaConciliadoraService  empresaConciliadoraService;
     private final RestClient restClient;
 
     // ================= CACHE GLOBAL =================
@@ -22,10 +24,11 @@ public class ProsprestarService {
     private final Map<String, OfficeResponse> officeCache = new ConcurrentHashMap<>();
 
     public ProsprestarService(
-            ProspectarRepositorio prospectarRepositorio,
+            ProspectarRepositorio prospectarRepositorio, EmpresaConciliadoraService empresaConciliadoraService,
             @Value("${cnpja.token}") String token) {
 
         this.prospectarRepositorio = prospectarRepositorio;
+        this.empresaConciliadoraService = empresaConciliadoraService;
 
         this.restClient = RestClient.builder()
                 .baseUrl("https://api.cnpja.com")
@@ -79,7 +82,7 @@ public class ProsprestarService {
         dados.put("telefone", response.getPhones());
         dados.put("status", response.getStatus());
         dados.put("cnae",  response.getMainActivity());
-
+        dados.put("eConciliadora", empresaConciliadoraService.findByIdCnpj(response.getTaxId()));
         List<Map<String, Object>> membros = response.getCompany()
                 .getMembers()
                 .stream()
@@ -136,6 +139,7 @@ public class ProsprestarService {
         empresaMap.put("nome_empresa_socio", company.getName());
 
 
+
         // membros empresa
         List<Person> membrosEmpresa = company.getMembers()
                 .stream()
@@ -161,6 +165,7 @@ public class ProsprestarService {
                             this::buscarOffice
                     );
                     empresaMap.put("cnpj_empresa_socio", office.getTaxId());
+                    empresaMap.put("eConciliadora", empresaConciliadoraService.findByIdCnpj(office.getTaxId()));
                     empresaMap.put("telefone", office.getPhones());
                     empresaMap.put("email", office.getEmails());
                     empresaMap.put("status", office.getStatus());

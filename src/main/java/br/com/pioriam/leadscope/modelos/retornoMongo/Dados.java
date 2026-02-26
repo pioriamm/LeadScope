@@ -10,6 +10,7 @@ import java.util.List;
         "compania_id",
         "cnpj_raiz_id",
         "empresa_raiz",
+        "eConciliadora",
         "alias",
         "email",
         "telefone",
@@ -23,7 +24,7 @@ public class Dados {
  private String cnpj_raiz_id;
  private String empresa_raiz;
  private String alias;
-
+ private boolean eConciliadora;
  private List<Email> email;
  private List<Phone> telefone;
  private Status status;

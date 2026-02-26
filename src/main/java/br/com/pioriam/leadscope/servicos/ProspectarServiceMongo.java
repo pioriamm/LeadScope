@@ -16,6 +16,7 @@ public class ProspectarServiceMongo {
 
 
     public List<ProspectarMongo> buscarDadosMongo (){
+
         return prospectarRepositorioMongo.findAll();
     }
 
