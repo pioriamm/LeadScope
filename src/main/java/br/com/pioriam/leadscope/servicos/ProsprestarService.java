@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ProsprestarService {
 
     private final ProspectarRepositorio prospectarRepositorio;
-    private final EmpresaConciliadoraService  empresaConciliadoraService;
+    private final EmpresaConciliadoraService empresaConciliadoraService;
     private final RestClient restClient;
 
     // ================= CACHE GLOBAL =================
@@ -24,7 +23,8 @@ public class ProsprestarService {
     private final Map<String, OfficeResponse> officeCache = new ConcurrentHashMap<>();
 
     public ProsprestarService(
-            ProspectarRepositorio prospectarRepositorio, EmpresaConciliadoraService empresaConciliadoraService,
+            ProspectarRepositorio prospectarRepositorio,
+            EmpresaConciliadoraService empresaConciliadoraService,
             @Value("${cnpja.token}") String token) {
 
         this.prospectarRepositorio = prospectarRepositorio;
@@ -51,11 +51,8 @@ public class ProsprestarService {
         List<Map<String, Object>> listaFinal = new ArrayList<>();
 
         for (String cnpjBase : listaCnpjBase) {
-
             OfficeResponse office = buscarOfficeCached(cnpjBase);
-
             Map<String, Object> empresa = montarEmpresa(office);
-
             listaFinal.add(empresa);
         }
 
@@ -81,8 +78,10 @@ public class ProsprestarService {
         dados.put("email", response.getEmails());
         dados.put("telefone", response.getPhones());
         dados.put("status", response.getStatus());
-        dados.put("cnae",  response.getMainActivity());
-        dados.put("eConciliadora", empresaConciliadoraService.findByIdCnpj(response.getTaxId()));
+        dados.put("cnae", response.getMainActivity());
+        dados.put("eConciliadora",
+                empresaConciliadoraService.findByIdCnpj(response.getTaxId()));
+
         List<Map<String, Object>> membros = response.getCompany()
                 .getMembers()
                 .stream()
@@ -122,7 +121,7 @@ public class ProsprestarService {
     }
 
     // =====================================================
-    // EMPRESA DO SÓCIO (ULTRA OTIMIZADO)
+    // EMPRESA DO SÓCIO
     // =====================================================
 
     private Map<String, Object> montarEmpresaSocio(Membership membership) {
@@ -138,19 +137,12 @@ public class ProsprestarService {
         empresaMap.put("id_empresa_socio", companyId);
         empresaMap.put("nome_empresa_socio", company.getName());
 
-
-
-        // membros empresa
         List<Person> membrosEmpresa = company.getMembers()
                 .stream()
                 .map(Member::getPerson)
                 .toList();
 
         empresaMap.put("membros_empresa_socio", membrosEmpresa);
-
-        // ======================
-        // OFFICE MATRIZ
-        // ======================
 
         company.getOffices()
                 .stream()
@@ -164,19 +156,21 @@ public class ProsprestarService {
                             taxId,
                             this::buscarOffice
                     );
+
                     empresaMap.put("cnpj_empresa_socio", office.getTaxId());
-                    empresaMap.put("eConciliadora", empresaConciliadoraService.findByIdCnpj(office.getTaxId()));
+                    empresaMap.put("eConciliadora",
+                            empresaConciliadoraService.findByIdCnpj(office.getTaxId()));
                     empresaMap.put("telefone", office.getPhones());
                     empresaMap.put("email", office.getEmails());
                     empresaMap.put("status", office.getStatus());
-                    empresaMap.put("cnae",  office.getMainActivity());
+                    empresaMap.put("cnae", office.getMainActivity());
                 });
 
         return empresaMap;
     }
 
     // =====================================================
-    // API CALLS COM CACHE
+    // API CALLS (SEM DELAY FIXO)
     // =====================================================
 
     private OfficeResponse buscarOfficeCached(String taxId) {
@@ -187,7 +181,6 @@ public class ProsprestarService {
     }
 
     private OfficeResponse buscarOffice(String taxId) {
-        aguardarLimite();
         return executarComRetry(() ->
                 restClient.get()
                         .uri("/office/{taxId}", taxId)
@@ -197,7 +190,6 @@ public class ProsprestarService {
     }
 
     private CompanyResponse buscarCompany(String id) {
-        aguardarLimite();
         return executarComRetry(() ->
                 restClient.get()
                         .uri("/company/{id}", id)
@@ -207,7 +199,6 @@ public class ProsprestarService {
     }
 
     private PersonResponse buscarPerson(String id) {
-        aguardarLimite();
         return executarComRetry(() ->
                 restClient.get()
                         .uri("/person/{id}", id)
@@ -217,16 +208,8 @@ public class ProsprestarService {
     }
 
     // =====================================================
-    // RATE LIMIT HANDLER
+    // RETRY AUTOMÁTICO PARA 429
     // =====================================================
-
-    private void aguardarLimite() {
-        try {
-            Thread.sleep(6000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
 
     private <T> T executarComRetry(SupplierWithException<T> supplier) {
 
