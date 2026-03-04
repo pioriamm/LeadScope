@@ -16,7 +16,8 @@ import java.util.List;
         "telefone",
         "status",
         "cnae",
-        "membros"
+        "membros",
+        "ativoConciliadora"
 })
 public class Dados {
 
@@ -29,6 +30,7 @@ public class Dados {
  private List<Phone> telefone;
  private Status status;
  private Cnae cnae;
+ private boolean ativoConciliadora;
 
  private List<Membro> membros;
 }

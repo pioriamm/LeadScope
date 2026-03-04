@@ -10,12 +10,14 @@ import java.util.List;
         "id_empresa_socio",
         "nome_empresa_socio",
         "cnpj_empresa_socio",
+        "ativoConciliadora",
         "eConciliadora",
         "email",
         "telefone",
         "status",
         "cnae",
         "membros_empresa_socio",
+
 })
 public class EmpresaSocio {
     private String id_empresa_socio;
@@ -27,4 +29,5 @@ public class EmpresaSocio {
     private List<Email> email;
     private Status status;
     private Cnae cnae;
+    private boolean ativoConciliadora;
 }

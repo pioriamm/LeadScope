@@ -17,5 +17,6 @@ public class EmpresaConciliadora {
     private String cnaDescricao;
     private boolean conciliadora;
     private boolean pesquisado;
+    private boolean ativoConciliadora;
 
 }

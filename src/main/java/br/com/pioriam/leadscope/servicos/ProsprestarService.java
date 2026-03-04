@@ -79,8 +79,10 @@ public class ProsprestarService {
         dados.put("telefone", response.getPhones());
         dados.put("status", response.getStatus());
         dados.put("cnae", response.getMainActivity());
-        dados.put("eConciliadora",
-                empresaConciliadoraService.findByIdCnpj(response.getTaxId()));
+        dados.put("eConciliadora", empresaConciliadoraService.findByIdCnpj(response.getTaxId()));
+
+        var empresa = empresaConciliadoraService.pegarStatusEmpresa(response.getTaxId());
+        dados.put("ativoConciliadora",empresa.isAtivoConciliadora() );
 
         List<Map<String, Object>> membros = response.getCompany()
                 .getMembers()
@@ -89,6 +91,8 @@ public class ProsprestarService {
                 .toList();
 
         dados.put("membros", membros);
+
+
 
         return dados;
     }
@@ -137,6 +141,7 @@ public class ProsprestarService {
         empresaMap.put("id_empresa_socio", companyId);
         empresaMap.put("nome_empresa_socio", company.getName());
 
+
         List<Person> membrosEmpresa = company.getMembers()
                 .stream()
                 .map(Member::getPerson)
@@ -158,12 +163,13 @@ public class ProsprestarService {
                     );
 
                     empresaMap.put("cnpj_empresa_socio", office.getTaxId());
-                    empresaMap.put("eConciliadora",
-                            empresaConciliadoraService.findByIdCnpj(office.getTaxId()));
+                    empresaMap.put("eConciliadora", empresaConciliadoraService.findByIdCnpj(office.getTaxId()));
                     empresaMap.put("telefone", office.getPhones());
                     empresaMap.put("email", office.getEmails());
                     empresaMap.put("status", office.getStatus());
                     empresaMap.put("cnae", office.getMainActivity());
+                    var empresa = empresaConciliadoraService.pegarStatusEmpresa(office.getTaxId());
+                    empresaMap.put("ativoConciliadora", empresa != null && empresa.isAtivoConciliadora());
                 });
 
         return empresaMap;
