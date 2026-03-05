@@ -25,13 +25,13 @@ public class ProsprestarService {
     public ProsprestarService(
             ProspectarRepositorio prospectarRepositorio,
             EmpresaConciliadoraService empresaConciliadoraService,
-            @Value("${cnpja.token}") String token) {
+            @Value("${cnpja.token}") String token, @Value("${cnpja.url}") String cnpja_url) {
 
         this.prospectarRepositorio = prospectarRepositorio;
         this.empresaConciliadoraService = empresaConciliadoraService;
 
         this.restClient = RestClient.builder()
-                .baseUrl("https://api.cnpja.com")
+                .baseUrl(cnpja_url)
                 .defaultHeader("Authorization", token)
                 .defaultHeader("Accept", "application/json")
                 .build();
