@@ -1,9 +1,11 @@
 package br.com.pioriam.leadscope.servicos;
 
+import br.com.pioriam.leadscope.modelos.DTO.CnpjRequest;
 import br.com.pioriam.leadscope.modelos.pesquisaCnpjjaa.*;
 import br.com.pioriam.leadscope.repositorio.ProspectarRepositorio;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
@@ -41,10 +43,10 @@ public class ProsprestarService {
     // ENTRY POINT
     // =====================================================
 
-    public List<Map<String, Object>> buscarDados(List<Map<String, String>> mapa) {
+    public List<Map<String, Object>> buscarDados(List<CnpjRequest> mapa) {
 
         List<String> listaCnpjBase = mapa.stream()
-                .flatMap(m -> m.values().stream())
+                .map(CnpjRequest::getCnpj)
                 .distinct()
                 .toList();
 
