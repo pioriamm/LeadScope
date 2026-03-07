@@ -20,9 +20,12 @@ public class ProspectarServiceMongo {
         this.prospectarRepositorioMongo = prospectarRepositorioMongos;
     }
 
-
     public Page<ProspectarMongo> buscarDadosMongo(Pageable pageable) {
         return prospectarRepositorioMongo.findAll(pageable);
+    }
+
+    public List<ProspectarMongo> buscarDadosMongoSemPaginacao() {
+        return prospectarRepositorioMongo.findAll();
     }
 
 }

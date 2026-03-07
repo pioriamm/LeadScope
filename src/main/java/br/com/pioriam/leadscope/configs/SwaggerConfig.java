@@ -18,7 +18,7 @@ public class SwaggerConfig {
     public OpenAPI leadscopeOpenAPI() {
 
         Server prodServer = new Server();
-        prodServer.setUrl("https://api.leadscope.com");
+        prodServer.setUrl("http://localhost:8080");
         prodServer.setDescription("Ambiente de Produção");
 
         Contact contato = new Contact();
@@ -26,9 +26,7 @@ public class SwaggerConfig {
         contato.setEmail("jhonny@conciliadora.com.br");
         contato.setUrl("https://conciliadora.com.br");
 
-        License licenca = new License()
-                .name("MIT License")
-                .url("https://opensource.org/licenses/MIT");
+        License licenca = new License().name("MIT License").url("https://opensource.org/licenses/MIT");
 
         Info info = new Info()
                 .title("LeadScope API")

@@ -20,13 +20,8 @@ import java.util.Map;
 @RequestMapping("/v1/cnpjja")
 public class ProspectarControle {
 
-
-    private final ProsprestarService proprestarService;
-
-    public ProspectarControle(ProsprestarService proprestarService) {
-        this.proprestarService = proprestarService;
-    }
-
+    @Autowired
+    ProsprestarService proprestarService;
 
 
     @Operation(
@@ -42,40 +37,40 @@ public class ProspectarControle {
                     examples = @ExampleObject(
                             name = "Exemplo de resposta",
                             value = """
-[
-  {
-    "compania_id": 12345678,
-    "cnpj_raiz_id": "12345678000199",
-    "empresa_raiz": "EMPRESA EXEMPLO TECNOLOGIA LTDA",
-    "alias": "Tech Solutions",
-    "email": [],
-    "telefone": [
-      {
-        "area": "31",
-        "number": "33334444",
-        "type": "LANDLINE"
-      }
-    ],
-    "status": {
-      "id": 2,
-      "text": "Ativa"
-    },
-    "cnae": {
-      "id": 6201501,
-      "text": "Desenvolvimento de software"
-    },
-    "eConciliadora": true,
-    "ativoConciliadora": false,
-    "membros": [
-      {
-        "id_membro": "11111111-2222-3333-4444-555555555555",
-        "nome_membro": "Carlos Andrade",
-        "empresas": []
-      }
-    ]
-  }
-]
-"""
+                                [
+                                  {
+                                    "compania_id": 12345678,
+                                    "cnpj_raiz_id": "12345678000199",
+                                    "empresa_raiz": "EMPRESA EXEMPLO TECNOLOGIA LTDA",
+                                    "alias": "Tech Solutions",
+                                    "email": [],
+                                    "telefone": [
+                                      {
+                                        "area": "31",
+                                        "number": "33334444",
+                                        "type": "LANDLINE"
+                                      }
+                                    ],
+                                    "status": {
+                                      "id": 2,
+                                      "text": "Ativa"
+                                    },
+                                    "cnae": {
+                                      "id": 6201501,
+                                      "text": "Desenvolvimento de software"
+                                    },
+                                    "eConciliadora": true,
+                                    "ativoConciliadora": false,
+                                    "membros": [
+                                      {
+                                        "id_membro": "11111111-2222-3333-4444-555555555555",
+                                        "nome_membro": "Carlos Andrade",
+                                        "empresas": []
+                                      }
+                                    ]
+                                  }
+                                ]
+                                """
                     )
             )
     )
