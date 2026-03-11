@@ -61,4 +61,19 @@ public class AuditoriaControler {
             return ResponseEntity.internalServerError().build();
         }
     }
+    @Operation(
+            summary = "Auditoria dos Leads",
+            description = "retorna a saude dos lead do cnpj raiz"
+    )
+    @GetMapping("/enrequecimentoLead")
+    public ResponseEntity<Map<String, Object>> enrequecimentoLead(@RequestParam  String cnpj) {
+
+        try {
+            Map<String, Object> resultado = auditoriaService.autidotiriaEnriquecimentoLead(cnpj);
+            return ResponseEntity.ok(resultado);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

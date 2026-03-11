@@ -5,7 +5,6 @@ import br.com.pioriam.leadscope.modelos.pesquisaCnpjjaa.*;
 import br.com.pioriam.leadscope.repositorio.ProspectarRepositorio;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 

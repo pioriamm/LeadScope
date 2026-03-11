@@ -25,7 +25,7 @@ public class ProspectarControle {
 
 
     @Operation(
-            summary = "Consultar empresas e sócios a partir do CNPJ",
+            summary = "Consultar empresas e sócios a partir do CNPJ na base do cnpja",
             description = "Recebe uma lista de CNPJs válidos, consulta os dados empresariais através da API CNPJA e retorna as informações da empresa, incluindo sócios e empresas vinculadas aos sócios."
     )
     @ApiResponse(
