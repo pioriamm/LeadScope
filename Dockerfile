@@ -7,4 +7,4 @@ RUN ./mvnw clean package -DskipTests
 
 EXPOSE 8080
 
-CMD ["java","-jar","target/LeadScope-0.0.1-SNAPSHOT.jar"]
+CMD ["java","-jar","target/leadScope-0.0.1-SNAPSHOT.jar"]
