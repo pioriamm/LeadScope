@@ -52,6 +52,7 @@ public class ProsprestarService {
         List<Map<String, Object>> listaFinal = new ArrayList<>();
 
         for (String cnpjBase : listaCnpjBase) {
+
             OfficeResponse office = buscarOfficeCached(cnpjBase);
             Map<String, Object> empresa = montarEmpresa(office);
             listaFinal.add(empresa);
@@ -81,7 +82,6 @@ public class ProsprestarService {
         dados.put("status", response.getStatus());
         dados.put("cnae", response.getMainActivity());
         dados.put("eConciliadora", empresaConciliadoraService.findByIdCnpj(response.getTaxId()));
-
         var empresa = empresaConciliadoraService.pegarStatusEmpresa(response.getTaxId());
         dados.put("ativoConciliadora",empresa.isAtivoConciliadora() );
 

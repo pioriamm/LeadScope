@@ -61,6 +61,7 @@ public class AuditoriaControler {
             return ResponseEntity.internalServerError().build();
         }
     }
+
     @Operation(
             summary = "Auditoria dos Leads",
             description = "retorna a saude dos lead do cnpj raiz"
