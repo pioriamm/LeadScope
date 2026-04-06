@@ -18,7 +18,7 @@ public class SwaggerConfig {
     public OpenAPI leadscopeOpenAPI() {
 
         Server prodServer = new Server();
-        prodServer.setUrl("http://localhost:8080");
+        prodServer.setUrl("https://leadscope-vaoo.onrender.com");
         prodServer.setDescription("Ambiente de Produção");
 
         Contact contato = new Contact();
